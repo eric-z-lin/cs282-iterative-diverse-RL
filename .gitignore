@@ -1,1 +1,6 @@
 ./venv
+.DS_Store
+./Logs/.DS_Store
+./Results/.DS_Store
+./Checkpoints/.DS_Store
+./Gifs/.DS_Store
