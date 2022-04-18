@@ -63,7 +63,7 @@ if __name__ == "__main__":
         agent.p_z = np.tile(p_z, agent.batch_size).reshape(agent.batch_size, curr_num_skills)
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
             # z = np.random.choice(params["n_skills"], p=p_z)
-            if (episode+1) % 20 == 0:    # Skills += 1 every 5 episodes
+            if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
                 curr_num_skills += params["skill_increment"]
                 curr_num_skills = min(curr_num_skills, params["n_skills"])
                 print(f'curr_num_skills {curr_num_skills}')
