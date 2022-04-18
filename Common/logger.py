@@ -20,6 +20,8 @@ class Logger:
         self._turn_on = False
         self.to_gb = lambda in_bytes: in_bytes / 1024 / 1024 / 1024
 
+        self.original_start_time = time.time()
+
         if self.config["do_train"] and self.config["train_from_scratch"]:
             self._create_wights_folder(self.log_dir)
             self._log_params()
@@ -84,11 +86,15 @@ class Logger:
                                      datetime.datetime.now().strftime("%H:%M:%S"),
                                      ))
 
+        cumulative_runtime = time.time()-self.original_start_time
+
         with SummaryWriter("Logs/" + self.log_dir) as writer:
             writer.add_scalar("Max episode reward", self.max_episode_reward, episode)
             writer.add_scalar("Running logq(z|s)", self.running_logq_zs, episode)
             writer.add_scalar("Episode reward", episode_reward, episode)
             writer.add_scalar("Number of skills", num_skills, episode)
+            writer.add_scalar("Cumulative runtime", cumulative_runtime, episode)
+            writer.add_scalar("Episode duration", self.duration, episode)
             writer.add_histogram(str(skill), episode_reward)
             writer.add_histogram("Total Rewards", episode_reward)
 
