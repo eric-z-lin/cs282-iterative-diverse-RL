@@ -3,6 +3,7 @@ from mujoco_py import GlfwContext
 import cv2
 import numpy as np
 import os
+import imageio
 
 GlfwContext(offscreen=True)
 
@@ -14,7 +15,6 @@ class Play:
         self.n_skills = n_skills
         self.agent.set_policy_net_to_cpu_mode()
         self.agent.set_policy_net_to_eval_mode()
-        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         if not os.path.exists("Vid/"):
             os.mkdir("Vid/")
 
@@ -27,7 +27,7 @@ class Play:
     def evaluate(self):
 
         for z in range(self.n_skills):
-            video_writer = cv2.VideoWriter(f"Vid/skill{z}" + ".avi", self.fourcc, 50.0, (250, 250))
+            images = []
             s = self.env.reset()
             s = self.concat_state_latent(s, z, self.n_skills)
             episode_reward = 0
@@ -42,8 +42,8 @@ class Play:
                 I = self.env.render(mode='rgb_array')
                 I = cv2.cvtColor(I, cv2.COLOR_RGB2BGR)
                 I = cv2.resize(I, (250, 250))
-                video_writer.write(I)
+                images.append(I)
             print(f"skill: {z}, episode reward:{episode_reward:.1f}")
-            video_writer.release()
+            imageio.mimsave(f"Vid/{self.env.unwrapped.spec.id}_skill{z}" + ".gif", images)
         self.env.close()
         cv2.destroyAllWindows()
