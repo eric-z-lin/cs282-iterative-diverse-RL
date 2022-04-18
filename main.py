@@ -57,10 +57,14 @@ if __name__ == "__main__":
 
         logger.on()
         curr_num_skills = params["n_skills_start"]
+        curr_num_skills = min(curr_num_skills, params["n_skills"])
+        print(f'curr_num_skills {curr_num_skills}')
+        p_z = np.full(curr_num_skills, 1 / curr_num_skills)
+        agent.p_z = np.tile(p_z, agent.batch_size).reshape(agent.batch_size, curr_num_skills)
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
             # z = np.random.choice(params["n_skills"], p=p_z)
             if (episode+1) % 20 == 0:    # Skills += 1 every 5 episodes
-                curr_num_skills += 1
+                curr_num_skills += params["skill_increment"]
                 curr_num_skills = min(curr_num_skills, params["n_skills"])
                 print(f'curr_num_skills {curr_num_skills}')
                 p_z = np.full(curr_num_skills, 1 / curr_num_skills)
