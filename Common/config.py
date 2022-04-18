@@ -15,9 +15,13 @@ def get_params():
                         help="The flag determines whether to train from scratch or continue previous tries.")
     parser.add_argument("--mem_size", default=int(1e+6), type=int, help="The memory size.")
     parser.add_argument("--n_skills", default=50, type=int, help="The number of skills to learn.")
+    parser.add_argument("--n_skills_start", default=2, type=int, help="The number of skills to start learning with.")
     parser.add_argument("--reward_scale", default=1, type=float, help="The reward scaling factor introduced in SAC.")
     parser.add_argument("--seed", default=123, type=int,
                         help="The randomness' seed for torch, numpy, random & gym[env].")
+    parser.add_argument("--max_n_episodes", default=500, type=int, help="The number of training episodes.")
+    parser.add_argument("--max_episode_len", default=1000, type=int, help="The maximum length per episode during training.")
+    parser.add_argument("--verbose", default=True, type=bool, help="If true, print statements every 10 episodes.")
 
     parser_params = parser.parse_args()
 
@@ -25,8 +29,6 @@ def get_params():
     # region default parameters
     default_params = {"lr": 3e-4,
                       "batch_size": 256,
-                      "max_n_episodes": 50,
-                      "max_episode_len": 1000,
                       "gamma": 0.99,
                       "alpha": 0.1,
                       "tau": 0.005,

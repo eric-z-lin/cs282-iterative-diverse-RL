@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     if params["do_train"]:
 
-        if not params["train_from_scratch"]:
+        if not params["train_from_scratch"]:    # load from logger
             episode, last_logq_zs, np_rng_state, *env_rng_states, torch_rng_state, random_rng_state = logger.load_weights()
             agent.hard_update_target_network()
             min_episode = episode
@@ -56,8 +56,17 @@ if __name__ == "__main__":
             print("Training from scratch.")
 
         logger.on()
+        curr_num_skills = params["n_skills_start"]
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
-            z = np.random.choice(params["n_skills"], p=p_z)
+            # z = np.random.choice(params["n_skills"], p=p_z)
+            if (episode+1) % 20 == 0:    # Skills += 1 every 5 episodes
+                curr_num_skills += 1
+                curr_num_skills = min(curr_num_skills, params["n_skills"])
+                print(f'curr_num_skills {curr_num_skills}')
+                p_z = np.full(curr_num_skills, 1 / curr_num_skills)
+                agent.p_z = np.tile(p_z, agent.batch_size).reshape(agent.batch_size, curr_num_skills)
+            z = np.random.choice(curr_num_skills, p=p_z)
+
             state = env.reset()
             state = concat_state_latent(state, z, params["n_skills"])
             episode_reward = 0
@@ -80,10 +89,12 @@ if __name__ == "__main__":
                 if done:
                     break
 
+            avg_logqzs = sum(logq_zses) / len(logq_zses)
             logger.log(episode,
                        episode_reward,
                        z,
-                       sum(logq_zses) / len(logq_zses),
+                       curr_num_skills,
+                       avg_logqzs,
                        step,
                        np.random.get_state(),
                        env.np_random.get_state(),
@@ -91,6 +102,8 @@ if __name__ == "__main__":
                        env.action_space.np_random.get_state(),
                        *agent.get_rng_states(),
                        )
+            if (episode+1) % 20 == 0 and params["verbose"]:
+                print(f'Episode {episode}, reward {episode_reward}, z {z}, avg_logqzs {avg_logqzs}')
 
     else:
         logger.load_weights()

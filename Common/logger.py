@@ -48,7 +48,7 @@ class Logger:
             return
         self._off()
 
-        episode, episode_reward, skill, logq_zs, step, *rng_states = args
+        episode, episode_reward, skill, num_skills, logq_zs, step, *rng_states = args
 
         self.max_episode_reward = max(self.max_episode_reward, episode_reward)
 
@@ -66,6 +66,7 @@ class Logger:
         if episode % self.config["interval"] == 0:
             print("E: {}| "
                   "Skill: {}| "
+                  "Num Skills: {}| "
                   "E_Reward: {:.1f}| "
                   "EP_Duration: {:.2f}| "
                   "Memory_Length: {}| "
@@ -73,6 +74,7 @@ class Logger:
                   "{:.1f}/{:.1f} GB RAM| "
                   "Time: {} ".format(episode,
                                      skill,
+                                     num_skills,
                                      episode_reward,
                                      self.duration,
                                      len(self.agent.memory),
@@ -85,6 +87,8 @@ class Logger:
         with SummaryWriter("Logs/" + self.log_dir) as writer:
             writer.add_scalar("Max episode reward", self.max_episode_reward, episode)
             writer.add_scalar("Running logq(z|s)", self.running_logq_zs, episode)
+            writer.add_scalar("Episode reward", episode_reward, episode)
+            writer.add_scalar("Number of skills", num_skills, episode)
             writer.add_histogram(str(skill), episode_reward)
             writer.add_histogram("Total Rewards", episode_reward)
 
