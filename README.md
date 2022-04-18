@@ -12,4 +12,4 @@ python3 main.py --mem_size=1000000 --env_name="Hopper-v3" --interval=20 --do_tra
 ```shell
 tensorboard --logdir='/your/path/here'
 ```
-- **If you want to create gifs, duplicate the saved params.pth into the main folder of the env (e.g. Hopper/) and run without the do_train_flag
+- **If you want to create gifs, duplicate the saved params.pth into the main folder of the env (e.g. Hopper/) and run without the do_train flag
