@@ -22,7 +22,9 @@ def get_params():
     parser.add_argument("--max_n_episodes", default=500, type=int, help="The number of training episodes.")
     parser.add_argument("--max_episode_len", default=1000, type=int, help="The maximum length per episode during training.")
     parser.add_argument("--verbose", default=True, type=bool, help="If true, print statements every 10 episodes.")
-    parser.add_argument("--skill_increment", default=2, type=int, help="The increment which skills is increased by each time.")
+    parser.add_argument("--skill_increment", default=0, type=int, help="The increment which skills is increased by each time.")
+    parser.add_argument("--max_reward_n_rds", default=0, type=int, help="This is the number of rounds the max reward has to be stagnant before increasing skill.")
+    parser.add_argument("--max_reward_n_rds_mult", default=1, type=float, help="Multiplier of max_reward_n_rds every time skills is incremented.")
 
     parser_params = parser.parse_args()
 

@@ -56,19 +56,35 @@ if __name__ == "__main__":
             print("Training from scratch.")
 
         logger.on()
+        
         curr_num_skills = params["n_skills_start"]
         curr_num_skills = min(curr_num_skills, params["n_skills"])
         print(f'curr_num_skills {curr_num_skills}')
         p_z = np.full(curr_num_skills, 1 / curr_num_skills)
         agent.p_z = np.tile(p_z, agent.batch_size).reshape(agent.batch_size, curr_num_skills)
+        
+        max_reward = -np.inf
+        max_reward_ep = 0
+        last_increment_ep = 0
+
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
             # z = np.random.choice(params["n_skills"], p=p_z)
-            if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
-                curr_num_skills += params["skill_increment"]
-                curr_num_skills = min(curr_num_skills, params["n_skills"])
-                print(f'curr_num_skills {curr_num_skills}')
-                p_z = np.full(curr_num_skills, 1 / curr_num_skills)
-                agent.p_z = np.tile(p_z, agent.batch_size).reshape(agent.batch_size, curr_num_skills)
+            if params["skill_increment"] > 0:
+                increment = False
+                if params["max_reward_n_rds"] > 0:      # Reward stagnant approach
+                    if episode - max_reward_ep >= params["max_reward_n_rds"]:
+                        if episode - last_increment_ep >= params["max_reward_n_rds"]:
+                            increment = True
+                else:   # Naive approach
+                    if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
+                        increment = True
+                if increment:     
+                    last_increment_ep = episode
+                    curr_num_skills += params["skill_increment"]
+                    curr_num_skills = min(curr_num_skills, params["n_skills"])
+                    print(f'curr_num_skills {curr_num_skills}')
+                    p_z = np.full(curr_num_skills, 1 / curr_num_skills)
+                    agent.p_z = np.tile(p_z, agent.batch_size).reshape(agent.batch_size, curr_num_skills)
             z = np.random.choice(curr_num_skills, p=p_z)
 
             state = env.reset()
@@ -92,6 +108,11 @@ if __name__ == "__main__":
                 state = next_state
                 if done:
                     break
+
+            # Update max reward
+            if episode_reward > max_reward:
+                max_reward = episode_reward
+                max_reward_ep = episode
 
             avg_logqzs = sum(logq_zses) / len(logq_zses)
             logger.log(episode,
