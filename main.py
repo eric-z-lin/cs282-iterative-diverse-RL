@@ -75,6 +75,7 @@ if __name__ == "__main__":
                     if episode - max_reward_ep >= params["max_reward_n_rds"]:
                         if episode - last_increment_ep >= params["max_reward_n_rds"]:
                             increment = True
+                            params["max_reward_n_rds"] *= params["max_reward_n_rds_mult"]
                 else:   # Naive approach
                     if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
                         increment = True
