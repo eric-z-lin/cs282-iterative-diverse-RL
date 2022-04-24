@@ -67,20 +67,28 @@ if __name__ == "__main__":
         max_reward_ep = 0
         last_increment_ep = 0
 
+        naive1_moving_avg = []
+
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
             # z = np.random.choice(params["n_skills"], p=p_z)
-            if params["skill_increment"] > 0:
+            selected_approach = params["approach"].lower()
+            if selected_approach != "none" and (episode - last_increment_ep) >= params["max_reward_n_rds"]:
                 increment = False
-                if params["max_reward_n_rds"] > 0:      # Reward stagnant approach
-                    if episode - max_reward_ep >= params["max_reward_n_rds"]:
-                        if episode - last_increment_ep >= params["max_reward_n_rds"]:
-                            increment = True
-                            params["max_reward_n_rds"] *= params["max_reward_n_rds_mult"]
-                else:   # Naive approach
+                if params["approach"] == "naive":   # Naive approach
                     if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
                         increment = True
+                elif params["approach"] == "reward":      # Reward stagnant approach
+                    if episode - max_reward_ep >= params["max_reward_n_rds"]:
+                        increment = True
+                elif params["approach"] == "diverse1":  # Diverse1 approach
+                    if len(naive1_moving_avg) > 1:
+                        perc_change = (naive1_moving_avg[-1] - naive1_moving_avg[-2]) / naive1_moving_avg[-2]
+                        if perc_change < params["epsilon_naive1_threshold"]:
+                            increment = True
                 if increment:     
                     last_increment_ep = episode
+                    params["max_reward_n_rds"] *= params["max_reward_n_rds_mult"]
+                    
                     curr_num_skills += params["skill_increment"]
                     curr_num_skills = min(curr_num_skills, params["n_skills"])
                     print(f'curr_num_skills {curr_num_skills}')

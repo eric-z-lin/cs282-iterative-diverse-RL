@@ -26,6 +26,11 @@ def get_params():
     parser.add_argument("--max_reward_n_rds", default=0, type=int, help="This is the number of rounds the max reward has to be stagnant before increasing skill.")
     parser.add_argument("--max_reward_n_rds_mult", default=1, type=float, help="Multiplier of max_reward_n_rds every time skills is incremented.")
 
+    parser.add_argument("--approach", default="none", type=str, help="Name of diversity increment approach {none, naive, reward, diverse1, diverse2}.")
+
+    # Naive1
+    parser.add_argument("--epsilon_naive1_threshold", default=-1, type=float, help="For naive1, skills will be increased if percent change in moving average is less than epsilon.")
+
     parser_params = parser.parse_args()
 
     #  Parameters based on the DIAYN and SAC papers.
