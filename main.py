@@ -72,7 +72,7 @@ if __name__ == "__main__":
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
             # z = np.random.choice(params["n_skills"], p=p_z)
             selected_approach = params["approach"].lower()
-            if selected_approach != "none" and (episode - last_increment_ep) >= params["min_reward_n_rds"]:
+            if selected_approach != "none" and (episode - last_increment_ep) >= params["min_reward_n_eps"]:
                 increment = False
                 if params["approach"] == "naive":   # Naive approach
                     if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 
                 if increment:     
                     last_increment_ep = episode
-                    params["min_reward_n_eps"] *= params["min_reward_n_rds_mult"]       # increase episodes in between skill increases
+                    params["min_reward_n_eps"] *= params["min_reward_n_eps_mult"]       # increase episodes in between skill increases
                     diversity_rewards_lst = []        # reset rewards list when skill is added
 
                     curr_num_skills += params["skill_increment"]
@@ -117,13 +117,14 @@ if __name__ == "__main__":
                 next_state, reward, done, _ = env.step(action)
                 next_state = concat_state_latent(next_state, z, params["n_skills"])
                 agent.store(state, z, done, action, next_state)
-                logq_zs, diversity_rewards = agent.train()
-                if logq_zs is None:
+                train_res = agent.train()
+                if train_res is None:
                     logq_zses.append(last_logq_zs)
                 else:
+                    logq_zs, diversity_rewards = train_res
                     logq_zses.append(logq_zs)
+                    cumulative_diversity_reward += sum(diversity_rewards)
                 episode_reward += reward
-                cumulative_diversity_reward += sum(diversity_rewards)
                 state = next_state
                 total_steps = step
                 if done:
