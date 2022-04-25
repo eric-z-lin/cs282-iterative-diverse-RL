@@ -29,7 +29,8 @@ def get_params():
     parser.add_argument("--approach", default="none", type=str, help="Name of diversity increment approach {none, naive, reward, diverse1, diverse2}.")
 
     # Naive1
-    parser.add_argument("--epsilon_naive1_threshold", default=-1, type=float, help="For naive1, skills will be increased if percent change in moving average is less than epsilon.")
+    parser.add_argument("--epsilon_diverse1_threshold", default=0.05, type=float, help="For diverse1, skills will be increased if percent change in moving average is less than epsilon.")
+    parser.add_argument("--moving_avg_length_diverse1", default=5, type=int, help="The number of past episodes to use while calculating moving average for diverse1.")
 
     parser_params = parser.parse_args()
 

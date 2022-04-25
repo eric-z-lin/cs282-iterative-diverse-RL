@@ -67,7 +67,7 @@ if __name__ == "__main__":
         max_reward_ep = 0
         last_increment_ep = 0
 
-        naive1_moving_avg = []
+        rewards_lst = []
 
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
             # z = np.random.choice(params["n_skills"], p=p_z)
@@ -81,14 +81,21 @@ if __name__ == "__main__":
                     if episode - max_reward_ep >= params["max_reward_n_rds"]:
                         increment = True
                 elif params["approach"] == "diverse1":  # Diverse1 approach
-                    if len(naive1_moving_avg) > 1:
-                        perc_change = (naive1_moving_avg[-1] - naive1_moving_avg[-2]) / naive1_moving_avg[-2]
-                        if perc_change < params["epsilon_naive1_threshold"]:
+                    if len(rewards_lst) > (2*params["moving_avg_length_diverse1"]):
+                        moving_avg_1 = sum(rewards_lst[-2*params["moving_avg_length_diverse1"]:-params["moving_avg_length_diverse1"]]) / params["moving_avg_length_diverse1"]
+                        moving_avg_2 = sum(rewards_lst[-params["moving_avg_length_diverse1"]:]) / params["moving_avg_length_diverse1"]
+                        
+                        perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
+                        if perc_change < params["epsilon_diverse1_threshold"]:
                             increment = True
+                else:
+                    raise ValueError("Not valid value for selected approach.")
+                
                 if increment:     
                     last_increment_ep = episode
-                    params["max_reward_n_rds"] *= params["max_reward_n_rds_mult"]
-                    
+                    params["max_reward_n_rds"] *= params["max_reward_n_rds_mult"]       # increase episodes in between skill increases
+                    rewards_lst = []        # reset rewards list when skill is added
+
                     curr_num_skills += params["skill_increment"]
                     curr_num_skills = min(curr_num_skills, params["n_skills"])
                     print(f'curr_num_skills {curr_num_skills}')
@@ -99,6 +106,7 @@ if __name__ == "__main__":
             state = env.reset()
             state = concat_state_latent(state, z, params["n_skills"])
             episode_reward = 0
+            total_steps = 0
             logq_zses = []
 
             max_n_steps = min(params["max_episode_len"], env.spec.max_episode_steps)
@@ -115,8 +123,12 @@ if __name__ == "__main__":
                     logq_zses.append(logq_zs)
                 episode_reward += reward
                 state = next_state
+                total_steps = step
                 if done:
                     break
+
+            # Append episode reward to list
+            rewards_lst.append(episode_reward)
 
             # Update max reward
             if episode_reward > max_reward:
