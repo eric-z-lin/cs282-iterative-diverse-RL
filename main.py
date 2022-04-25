@@ -68,6 +68,7 @@ if __name__ == "__main__":
         last_increment_ep = 0
 
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
+
             # z = np.random.choice(params["n_skills"], p=p_z)
             if params["skill_increment"] > 0:
                 increment = False
@@ -89,15 +90,28 @@ if __name__ == "__main__":
             z = np.random.choice(curr_num_skills, p=p_z)
 
             state = env.reset()
+            env_state = state
             state = concat_state_latent(state, z, params["n_skills"])
             episode_reward = 0
+            diverse2_curr_ep_total = 0
+            diverse2_curr_ep_avg = 0
+            episode_steps = 0
             logq_zses = []
 
             max_n_steps = min(params["max_episode_len"], env.spec.max_episode_steps)
             for step in range(1, 1 + max_n_steps):
 
+                for skill1 in range(curr_num_skills - params["skill_increment"], curr_num_skills): 
+                    state_latent1 = concat_state_latent(env_state, skill1, params["n_skills"])
+                    action1 = agent.choose_action(state_latent1)
+                    for skill2 in range(curr_num_skills): 
+                        state_latent2 = concat_state_latent(env_state, skill2, params["n_skills"])
+                        action2 = agent.choose_action(state_latent2)
+                        diverse2_curr_ep_total += np.linalg.norm(skill1-skill2)
+
                 action = agent.choose_action(state)
                 next_state, reward, done, _ = env.step(action)
+                env_state = next_state
                 next_state = concat_state_latent(next_state, z, params["n_skills"])
                 agent.store(state, z, done, action, next_state)
                 logq_zs = agent.train()
@@ -108,7 +122,11 @@ if __name__ == "__main__":
                 episode_reward += reward
                 state = next_state
                 if done:
+                    episode_steps = step
                     break
+            if episode_steps == 0:
+                episode_steps = max_n_steps
+            diverse2_curr_ep_avg = diverse2_curr_ep_total / episode_steps
 
             # Update max reward
             if episode_reward > max_reward:
