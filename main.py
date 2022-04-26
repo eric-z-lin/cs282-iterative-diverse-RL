@@ -67,21 +67,46 @@ if __name__ == "__main__":
         max_reward_ep = 0
         last_increment_ep = 0
 
+        diversity_rewards_lst = []
+        diversity_actiondiff_lst = []
+
         for episode in tqdm(range(1 + min_episode, params["max_n_episodes"] + 1)):
 
             # z = np.random.choice(params["n_skills"], p=p_z)
-            if params["skill_increment"] > 0:
+            selected_approach = params["approach"].lower()
+            if selected_approach != "none" and (episode - last_increment_ep) >= params["min_reward_n_rds"]:
                 increment = False
-                if params["max_reward_n_rds"] > 0:      # Reward stagnant approach
-                    if episode - max_reward_ep >= params["max_reward_n_rds"]:
-                        if episode - last_increment_ep >= params["max_reward_n_rds"]:
-                            increment = True
-                            params["max_reward_n_rds"] *= params["max_reward_n_rds_mult"]
-                else:   # Naive approach
+                if params["approach"] == "naive":   # Naive approach
                     if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
                         increment = True
+                elif params["approach"] == "reward":      # Reward stagnant approach
+                    if episode - max_reward_ep >= params["min_reward_n_eps"]:
+                        increment = True
+                elif params["approach"] == "diverse1":  # Diverse1 approach
+                    if len(diversity_rewards_lst) > (2*params["moving_avg_length_diverse1"]):
+                        moving_avg_1 = sum(diversity_rewards_lst[-2*params["moving_avg_length_diverse1"]:-params["moving_avg_length_diverse1"]]) / params["moving_avg_length_diverse1"]
+                        moving_avg_2 = sum(diversity_rewards_lst[-params["moving_avg_length_diverse1"]:]) / params["moving_avg_length_diverse1"]
+                        
+                        perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
+                        if perc_change < params["epsilon_diverse1_threshold"]:
+                            increment = True
+                elif params["approach"] == "diverse2": 
+                    if len(diversity_actiondiff_lst) > (2*params["moving_avg_length_diverse2"]): 
+                        moving_avg_1 = sum(diversity_actiondiff_lst[-2*params["moving_avg_length_diverse2"]:-params["moving_avg_length_diverse2"]]) / params["moving_avg_length_diverse2"]
+                        moving_avg_2 = sum(diversity_actiondiff_lst[-params["moving_avg_length_diverse2"]:]) / params["moving_avg_length_diverse2"]
+                        
+                        perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
+                        if perc_change < params["epsilon_diverse2_threshold"]:
+                            increment = True
+                else:
+                    raise ValueError("Not valid value for selected approach.")
+                
                 if increment:     
                     last_increment_ep = episode
+                    params["min_reward_n_eps"] *= params["min_reward_n_rds_mult"]       # increase episodes in between skill increases
+                    diversity_rewards_lst = []        # reset rewards list when skill is added
+                    diversity_actiondiff_lst = []
+
                     curr_num_skills += params["skill_increment"]
                     curr_num_skills = min(curr_num_skills, params["n_skills"])
                     print(f'curr_num_skills {curr_num_skills}')
@@ -94,39 +119,43 @@ if __name__ == "__main__":
             state = concat_state_latent(state, z, params["n_skills"])
             episode_reward = 0
             diverse2_curr_ep_total = 0
-            diverse2_curr_ep_avg = 0
             episode_steps = 0
+            cumulative_diversity_reward = 0
+            total_steps = 0
             logq_zses = []
 
             max_n_steps = min(params["max_episode_len"], env.spec.max_episode_steps)
             for step in range(1, 1 + max_n_steps):
 
-                for skill1 in range(curr_num_skills - params["skill_increment"], curr_num_skills): 
-                    state_latent1 = concat_state_latent(env_state, skill1, params["n_skills"])
-                    action1 = agent.choose_action(state_latent1)
-                    for skill2 in range(curr_num_skills): 
-                        state_latent2 = concat_state_latent(env_state, skill2, params["n_skills"])
-                        action2 = agent.choose_action(state_latent2)
-                        diverse2_curr_ep_total += np.linalg.norm(skill1-skill2)
+                if params["approach"] == "diverse2":
+                    for skill1 in range(curr_num_skills - params["skill_increment"], curr_num_skills): 
+                        state_latent1 = concat_state_latent(env_state, skill1, params["n_skills"])
+                        action1 = agent.choose_action(state_latent1)
+                        for skill2 in range(curr_num_skills): 
+                            state_latent2 = concat_state_latent(env_state, skill2, params["n_skills"])
+                            action2 = agent.choose_action(state_latent2)
+                            diverse2_curr_ep_total += np.linalg.norm(skill1-skill2)
 
                 action = agent.choose_action(state)
                 next_state, reward, done, _ = env.step(action)
                 env_state = next_state
                 next_state = concat_state_latent(next_state, z, params["n_skills"])
                 agent.store(state, z, done, action, next_state)
-                logq_zs = agent.train()
+                logq_zs, diversity_rewards = agent.train()
                 if logq_zs is None:
                     logq_zses.append(last_logq_zs)
                 else:
                     logq_zses.append(logq_zs)
                 episode_reward += reward
+                cumulative_diversity_reward += sum(diversity_rewards)
                 state = next_state
+                total_steps = step
                 if done:
-                    episode_steps = step
                     break
-            if episode_steps == 0:
-                episode_steps = max_n_steps
-            diverse2_curr_ep_avg = diverse2_curr_ep_total / episode_steps
+
+            # Append episode reward to list
+            diversity_rewards_lst.append(cumulative_diversity_reward)
+            diversity_actiondiff_lst.append(diverse2_curr_ep_total / total_steps) # is eric not avging over steps (?)
 
             # Update max reward
             if episode_reward > max_reward:

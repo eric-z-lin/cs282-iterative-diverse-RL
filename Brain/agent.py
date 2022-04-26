@@ -135,7 +135,7 @@ class SACAgent:
 
             self.soft_update_target_network(self.value_network, self.value_target_network)
 
-            return -discriminator_loss.item()
+            return -discriminator_loss.item(), rewards.float()
 
     def soft_update_target_network(self, local_network, target_network):
         for target_param, local_param in zip(target_network.parameters(), local_network.parameters()):
