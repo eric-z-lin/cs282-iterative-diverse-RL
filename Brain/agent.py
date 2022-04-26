@@ -78,6 +78,7 @@ class SACAgent:
         return states, zs, dones, actions, next_states
 
     def train(self):
+        print(len(self.memory), self.batch_size)
         if len(self.memory) < self.batch_size:
             return None
         else:
