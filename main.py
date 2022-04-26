@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
             # Append episode reward to list
             diversity_rewards_lst.append(cumulative_diversity_reward)
-            diversity_actiondiff_lst.append(diverse2_curr_ep_total / total_steps) # is eric not avging over steps (?)
+            diversity_actiondiff_lst.append(diverse2_curr_ep_total / total_steps)
 
             # Update max reward
             if episode_reward > max_reward:
