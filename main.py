@@ -74,13 +74,13 @@ if __name__ == "__main__":
 
             # z = np.random.choice(params["n_skills"], p=p_z)
             selected_approach = params["approach"].lower()
-            if selected_approach != "none" and (episode - last_increment_ep) >= params["min_reward_n_eps"]:
+            if selected_approach != "none" and (episode - last_increment_ep) >= params["min_eps_before_inc"]:
                 increment = False
                 if params["approach"] == "naive":   # Naive approach
                     if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
                         increment = True
                 elif params["approach"] == "reward":      # Reward stagnant approach
-                    if episode - max_reward_ep >= params["min_reward_n_eps"]:
+                    if episode - max_reward_ep >= params["min_eps_before_inc"]:
                         increment = True
                 elif params["approach"] == "diverse1":  # Diverse1 approach
                     if len(diversity_rewards_lst) > (2*params["moving_avg_length_diverse1"]):
@@ -95,15 +95,16 @@ if __name__ == "__main__":
                         moving_avg_1 = sum(diversity_actiondiff_lst[-2*params["moving_avg_length_diverse2"]:-params["moving_avg_length_diverse2"]]) / params["moving_avg_length_diverse2"]
                         moving_avg_2 = sum(diversity_actiondiff_lst[-params["moving_avg_length_diverse2"]:]) / params["moving_avg_length_diverse2"]
                         
-                        perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
-                        if perc_change < params["epsilon_diverse2_threshold"]:
-                            increment = True
+                        if moving_avg_1 != 0:
+                            perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
+                            if perc_change > params["epsilon_diverse2_threshold"]:
+                                increment = True
                 else:
                     raise ValueError("Not valid value for selected approach.")
                 
                 if increment:     
                     last_increment_ep = episode
-                    params["min_reward_n_eps"] *= params["min_reward_n_eps_mult"]       # increase episodes in between skill increases
+                    params["min_eps_before_inc"] *= params["min_eps_before_inc_mult"]       # increase episodes in between skill increases
                     diversity_rewards_lst = []        # reset rewards list when skill is added
                     diversity_actiondiff_lst = []
 
@@ -129,6 +130,7 @@ if __name__ == "__main__":
 
                 if params["approach"] == "diverse2":
                     for skill1 in range(curr_num_skills - params["skill_increment"], curr_num_skills): 
+                        # skill1 = curr_num_skills -1 
                         state_latent1 = concat_state_latent(env_state, skill1, params["n_skills"])
                         action1 = agent.choose_action(state_latent1)
                         for skill2 in range(curr_num_skills): 
@@ -170,6 +172,7 @@ if __name__ == "__main__":
                        curr_num_skills,
                        avg_logqzs,
                        step,
+                       diverse2_curr_ep_total,
                        np.random.get_state(),
                        env.np_random.get_state(),
                        env.observation_space.np_random.get_state(),
