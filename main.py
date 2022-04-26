@@ -87,8 +87,9 @@ if __name__ == "__main__":
                         moving_avg_1 = sum(diversity_rewards_lst[-2*params["moving_avg_length_diverse1"]:-params["moving_avg_length_diverse1"]]) / params["moving_avg_length_diverse1"]
                         moving_avg_2 = sum(diversity_rewards_lst[-params["moving_avg_length_diverse1"]:]) / params["moving_avg_length_diverse1"]
                         
-                        perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
-                        if perc_change < params["epsilon_diverse1_threshold"]:
+                        if moving_avg_1 != 0:
+                            perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
+                        if perc_change > params["epsilon_diverse1_threshold"]:
                             increment = True
                 elif params["approach"] == "diverse2": 
                     if len(diversity_actiondiff_lst) > (2*params["moving_avg_length_diverse2"]): 

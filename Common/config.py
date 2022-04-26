@@ -23,14 +23,16 @@ def get_params():
     parser.add_argument("--max_episode_len", default=1000, type=int, help="The maximum length per episode during training.")
     parser.add_argument("--verbose", default=True, type=bool, help="If true, print statements every 10 episodes.")
     parser.add_argument("--skill_increment", default=0, type=int, help="The increment which skills is increased by each time.")
-    parser.add_argument("--min_eps_before_inc", default=0, type=int, help="This is the number of rounds minimum before increasing skill.")
+    parser.add_argument("--min_eps_before_inc", default=20, type=int, help="This is the number of rounds minimum before increasing skill.")
     parser.add_argument("--min_eps_before_inc_mult", default=1, type=float, help="Multiplier of previous flag.")
 
     parser.add_argument("--approach", default="none", type=str, help="Name of diversity increment approach {none, naive, reward, diverse1, diverse2}.")
 
-    # Naive1
-    parser.add_argument("--epsilon_diverse1_threshold", default=0.05, type=float, help="For diverse1, skills will be increased if percent change in moving average is less than epsilon.")
-    parser.add_argument("--moving_avg_length_diverse1", default=5, type=int, help="The number of past episodes to use while calculating moving average for diverse1.")
+    # Diverse1
+    parser.add_argument("--epsilon_diverse1_threshold", default=0.5, type=float, help="For diverse1, skills will be increased if percent change in moving average is less than epsilon.")
+    parser.add_argument("--moving_avg_length_diverse1", default=10, type=int, help="The number of past episodes to use while calculating moving average for diverse1.")
+    
+    # Diverse2
     parser.add_argument("--epsilon_diverse2_threshold", default=0.05, type=float, help="Analogous to diverse1.")
     parser.add_argument("--moving_avg_length_diverse2", default=5, type=int, help="Analogous to diverse1.")
 
