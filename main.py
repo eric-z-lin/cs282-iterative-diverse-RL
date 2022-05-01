@@ -76,13 +76,13 @@ if __name__ == "__main__":
             selected_approach = params["approach"].lower()
             if selected_approach != "none" and (episode - last_increment_ep) >= params["min_eps_before_inc"]:
                 increment = False
-                if params["approach"] == "naive":   # Naive approach
+                if selected_approach == "naive":   # Naive approach
                     if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
                         increment = True
-                elif params["approach"] == "reward":      # Reward stagnant approach
+                elif selected_approach == "reward":      # Reward stagnant approach
                     if episode - max_reward_ep >= params["min_eps_before_inc"]:
                         increment = True
-                elif params["approach"] == "diverse1":  # Diverse1 approach
+                elif selected_approach == "diverse1":  # Diverse1 approach
                     if len(diversity_rewards_lst) > (2*params["moving_avg_length_diverse1"]):
                         moving_avg_1 = sum(diversity_rewards_lst[-2*params["moving_avg_length_diverse1"]:-params["moving_avg_length_diverse1"]]) / params["moving_avg_length_diverse1"]
                         moving_avg_2 = sum(diversity_rewards_lst[-params["moving_avg_length_diverse1"]:]) / params["moving_avg_length_diverse1"]
@@ -91,7 +91,7 @@ if __name__ == "__main__":
                             perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
                             if perc_change > params["epsilon_diverse1_threshold"]:
                                 increment = True
-                elif params["approach"] == "diverse2": 
+                elif selected_approach == "diverse2": 
                     if len(diversity_actiondiff_lst) > (2*params["moving_avg_length_diverse2"]): 
                         moving_avg_1 = sum(diversity_actiondiff_lst[-2*params["moving_avg_length_diverse2"]:-params["moving_avg_length_diverse2"]]) / params["moving_avg_length_diverse2"]
                         moving_avg_2 = sum(diversity_actiondiff_lst[-params["moving_avg_length_diverse2"]:]) / params["moving_avg_length_diverse2"]
