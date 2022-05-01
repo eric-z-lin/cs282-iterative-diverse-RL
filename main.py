@@ -89,8 +89,8 @@ if __name__ == "__main__":
                         
                         if moving_avg_1 != 0:
                             perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
-                        if perc_change > params["epsilon_diverse1_threshold"]:
-                            increment = True
+                            if perc_change > params["epsilon_diverse1_threshold"]:
+                                increment = True
                 elif params["approach"] == "diverse2": 
                     if len(diversity_actiondiff_lst) > (2*params["moving_avg_length_diverse2"]): 
                         moving_avg_1 = sum(diversity_actiondiff_lst[-2*params["moving_avg_length_diverse2"]:-params["moving_avg_length_diverse2"]]) / params["moving_avg_length_diverse2"]
