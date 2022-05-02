@@ -76,22 +76,22 @@ if __name__ == "__main__":
             selected_approach = params["approach"].lower()
             if selected_approach != "none" and (episode - last_increment_ep) >= params["min_eps_before_inc"]:
                 increment = False
-                if params["approach"] == "naive":   # Naive approach
+                if selected_approach == "naive":   # Naive approach
                     if (episode+1) % params["interval"] == 0:    # Skills += K every N episodes
                         increment = True
-                elif params["approach"] == "reward":      # Reward stagnant approach
+                elif selected_approach == "reward":      # Reward stagnant approach
                     if episode - max_reward_ep >= params["min_eps_before_inc"]:
                         increment = True
-                elif params["approach"] == "diverse1":  # Diverse1 approach
+                elif selected_approach == "diverse1":  # Diverse1 approach
                     if len(diversity_rewards_lst) > (2*params["moving_avg_length_diverse1"]):
                         moving_avg_1 = sum(diversity_rewards_lst[-2*params["moving_avg_length_diverse1"]:-params["moving_avg_length_diverse1"]]) / params["moving_avg_length_diverse1"]
                         moving_avg_2 = sum(diversity_rewards_lst[-params["moving_avg_length_diverse1"]:]) / params["moving_avg_length_diverse1"]
                         
                         if moving_avg_1 != 0:
                             perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
-                        if perc_change > params["epsilon_diverse1_threshold"]:
-                            increment = True
-                elif params["approach"] == "diverse2": 
+                            if perc_change > params["epsilon_diverse1_threshold"]:
+                                increment = True
+                elif selected_approach == "diverse2": 
                     if len(diversity_actiondiff_lst) > (2*params["moving_avg_length_diverse2"]): 
                         moving_avg_1 = sum(diversity_actiondiff_lst[-2*params["moving_avg_length_diverse2"]:-params["moving_avg_length_diverse2"]]) / params["moving_avg_length_diverse2"]
                         moving_avg_2 = sum(diversity_actiondiff_lst[-params["moving_avg_length_diverse2"]:]) / params["moving_avg_length_diverse2"]
@@ -122,7 +122,7 @@ if __name__ == "__main__":
             episode_reward = 0
             diverse2_curr_ep_total = 0
             episode_steps = 0
-            cumulative_diversity_reward = 0
+            diverse1_cumulative_reward = 0
             total_steps = 0
             logq_zses = []
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
                 else:
                     logq_zs, diversity_rewards = train_res
                     logq_zses.append(logq_zs)
-                    cumulative_diversity_reward += sum(diversity_rewards)
+                    diverse1_cumulative_reward += sum(diversity_rewards)
                 episode_reward += reward
                 state = next_state
                 total_steps = step
@@ -158,7 +158,7 @@ if __name__ == "__main__":
                     break
 
             # Append episode reward to list
-            diversity_rewards_lst.append(cumulative_diversity_reward)
+            diversity_rewards_lst.append(diverse1_cumulative_reward)
             diverse2_curr_ep_avg = diverse2_curr_ep_total / total_steps
             diversity_actiondiff_lst.append(diverse2_curr_ep_avg)
 
@@ -174,6 +174,8 @@ if __name__ == "__main__":
                        curr_num_skills,
                        avg_logqzs,
                        step,
+                       diverse2_curr_ep_avg,
+                       diverse1_cumulative_reward,
                        diverse2_curr_ep_avg,
                        np.random.get_state(),
                        env.np_random.get_state(),
