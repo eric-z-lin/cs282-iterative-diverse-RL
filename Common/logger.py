@@ -50,7 +50,7 @@ class Logger:
             return
         self._off()
 
-        episode, episode_reward, skill, num_skills, logq_zs, step, diverse2_curr_ep_total, *rng_states = args
+        episode, episode_reward, skill, num_skills, logq_zs, step, diverse2_curr_ep_avg, *rng_states = args
 
         self.max_episode_reward = max(self.max_episode_reward, episode_reward)
 
@@ -95,7 +95,7 @@ class Logger:
             writer.add_scalar("Number of skills", num_skills, episode)
             writer.add_scalar("Cumulative runtime", cumulative_runtime, episode)
             writer.add_scalar("Episode duration", self.duration, episode)
-            writer.add_scalar("Episode Diverse2 total", diverse2_curr_ep_total, episode)
+            writer.add_scalar("Episode Diverse2 avg", diverse2_curr_ep_avg, episode)
             writer.add_histogram(str(skill), episode_reward)
             writer.add_histogram("Total Rewards", episode_reward)
 

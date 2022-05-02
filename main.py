@@ -98,7 +98,7 @@ if __name__ == "__main__":
                         
                         if moving_avg_1 != 0:
                             perc_change = (moving_avg_2 - moving_avg_1) / moving_avg_1
-                            if perc_change > params["epsilon_diverse2_threshold"]:
+                            if perc_change < 0 and perc_change < params["epsilon_diverse2_threshold"]:
                                 increment = True
                 else:
                     raise ValueError("Not valid value for selected approach.")
@@ -131,13 +131,13 @@ if __name__ == "__main__":
 
                 if params["approach"] == "diverse2":
                     for skill1 in range(curr_num_skills - params["skill_increment"], curr_num_skills): 
-                        # skill1 = curr_num_skills -1 
+                        skill1 = curr_num_skills - 1 
                         state_latent1 = concat_state_latent(env_state, skill1, params["n_skills"])
                         action1 = agent.choose_action(state_latent1)
                         for skill2 in range(curr_num_skills): 
                             state_latent2 = concat_state_latent(env_state, skill2, params["n_skills"])
                             action2 = agent.choose_action(state_latent2)
-                            diverse2_curr_ep_total += np.linalg.norm(skill1-skill2)
+                            diverse2_curr_ep_total += np.linalg.norm(action1-action2)
 
                 action = agent.choose_action(state)
                 next_state, reward, done, _ = env.step(action)
@@ -159,7 +159,8 @@ if __name__ == "__main__":
 
             # Append episode reward to list
             diversity_rewards_lst.append(cumulative_diversity_reward)
-            diversity_actiondiff_lst.append(diverse2_curr_ep_total / total_steps)
+            diverse2_curr_ep_avg = diverse2_curr_ep_total / total_steps
+            diversity_actiondiff_lst.append(diverse2_curr_ep_avg)
 
             # Update max reward
             if episode_reward > max_reward:
@@ -173,7 +174,7 @@ if __name__ == "__main__":
                        curr_num_skills,
                        avg_logqzs,
                        step,
-                       diverse2_curr_ep_total,
+                       diverse2_curr_ep_avg,
                        np.random.get_state(),
                        env.np_random.get_state(),
                        env.observation_space.np_random.get_state(),
