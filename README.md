@@ -1,7 +1,9 @@
 # cs282-iterative-diverse-RL
+Authors: Eric Lin and Catherine Zeng  
 
-Based off of DIAYN paper
-Authors: Eric Lin and Catherine Zeng
+
+### Objective
+We extend the original DIAYN paper by proposing four separate approaches to iteratively learn the number of skills. We evaluate this on `Hopper` and `BipedalWalker` environments.
 
 ### Usage
 - **If you want to run default experiment
